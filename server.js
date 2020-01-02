@@ -1,39 +1,34 @@
 require('dotenv').config()
-
 const express = require('express')
 const app = express()
-const logger = require('morgan')
-const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
+const port = 3000
 
-// TODO: Add routes for app.use
-PORT = process.env.PORT || 3001, 
-routes = require("./routes"); 
+// loads routes to b
+const routes = require("./routes/index.js"); 
 
-mongoose.createConnection(process.env.MONGODB_URI || "mongodb://localhost/creeksideRace");
+// added based on the walkthrough https://dev.to/dwipr/example-rest-api-with-express-js-mongoose-and-babel-2483  
+mongoose.Promise = global.Promise
 
+//connecting mongoDB (via mongoose)
 
-// Define middleware here
+mongoose.connect(process.env.MONGODB_URI, { useUnifiedTopology: true, useNewUrlParser: true, useFindAndModify: true, useCreateIndex: true } );
+
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error: '));
+db.once('open', function() {
+  console.log(`+ you connected to the DB`); 
+})
+
+//initializing middleware 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+// use the routes from index.js when you hit the endpoint '/'
+app.use('/', routes);
 
+app.get('/somethingnew', (req, res) => res.send('this is something new here'))
 
-// Serve up static assets (usually on heroku)
-if (process.env.NODE_ENV === "production") {
-	app.use(express.static("client/build"));
-  }
+app.listen(port, () => console.log(`Yo shit is served up on ${port}!`))
   
-  // Add routes, both API and view
-  app.use(routes);
-  
-console.log(routes); 
+// app.use(express.static(`${__dirname}/client/build`))
 
-app.use(express.static(`${__dirname}/client/build`))
-app.use(logger('dev'))
-app.use(bodyParser.json())
-
-
-
-app.listen(PORT, (err) => {
-	console.log(err || `Server running on port ${PORT}.`)
-})
